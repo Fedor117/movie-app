@@ -1,6 +1,7 @@
 <resources>
 
     <string name="app_name">MovieApp</string>
+    <string name="content_authority">com.example.user.movieapp</string>
 
     <!-- Titles for activities -->
     <string name="title_activity_detail">Details</string>
@@ -18,5 +19,8 @@
     <string name="pref_sort_key" translatable="false">sort</string>
     <string name="pref_sort_popularity" translatable="false">popularity.desc</string>
     <string name="pref_sort_rating" translatable="false">vote_average.desc</string>
+
+    <!-- SyncAdapter related -->
+    <string name="sync_account_type">movieapp.user.example.com</string>
 
 </resources>

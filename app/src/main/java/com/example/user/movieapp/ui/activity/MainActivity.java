@@ -1,6 +1,9 @@
 package com.example.user.movieapp.ui.activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,11 +11,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.user.movieapp.R;
+import com.example.user.movieapp.data.sync.MovieSyncAdapter;
 import com.example.user.movieapp.ui.fragment.MovieFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MovieFragment.Callback {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static final String MOVIEFRAGMENT_TAG = "MFTAG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
                     .add(R.id.container, new MovieFragment())
                     .commit();
         }
+        MovieSyncAdapter.initializeSyncAdapter(this);
     }
 
     @Override
@@ -41,6 +47,14 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemSelected(Uri movieUri) {
+        Log.d(LOG_TAG, "Movie URI = " + movieUri);
+        Intent intent = new Intent(this, DetailActivity.class)
+                .setData(movieUri);
+        startActivity(intent);
     }
 
 }
