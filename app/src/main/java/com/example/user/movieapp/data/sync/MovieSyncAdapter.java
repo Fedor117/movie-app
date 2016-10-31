@@ -7,6 +7,7 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.os.Build;
@@ -15,6 +16,7 @@ import android.util.Log;
 
 import com.example.user.movieapp.R;
 import com.example.user.movieapp.data.MovieDbUrl;
+import com.example.user.movieapp.data.Utility;
 import com.example.user.movieapp.data.provider.MovieContract;
 
 import org.json.JSONArray;
@@ -32,7 +34,6 @@ import java.util.Vector;
 public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private static final String LOG_TAG = MovieSyncAdapter.class.getSimpleName();
-    private static final String SORT_ORDER = "popularity.desc";
 
     public static final int SYNC_INTERVAL = 60 * 180;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
@@ -47,10 +48,11 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
         String moviesJsonStr;
+        String sortOrder = Utility.getSortOrder(getContext());
 
         try {
             MovieDbUrl movieDbUrl = MovieDbUrl.getInstance();
-            URL url = new URL(movieDbUrl.createUrl(SORT_ORDER));
+            URL url = new URL(movieDbUrl.createUrl(sortOrder));
 
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
@@ -92,66 +94,6 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
                     Log.e(LOG_TAG, "Error closing stream", e);
                 }
             }
-        }
-    }
-
-    private void getMovieDescriptionFromJson(String moviesJsonStr)
-            throws JSONException {
-        Log.d(LOG_TAG, moviesJsonStr);
-        final String TMDB_RESULTS = "results";
-        final String TMDB_POSTER_PATH = "poster_path";
-        final String TMDB_OVERVIEW = "overview";
-        final String TMDB_RELEASE_DATE = "release_date";
-        final String TMDB_ORIGINAL_TITLE = "original_title";
-        final String TMDB_VOTE_AVG = "vote_average";
-
-        try {
-            JSONObject movieJson = new JSONObject(moviesJsonStr);
-            JSONArray movieArray = movieJson.getJSONArray(TMDB_RESULTS);
-
-            Vector<ContentValues> valuesVector = new Vector<>(movieArray.length());
-
-            for (int i = 0; i < 20; i++) {
-                String title;
-                String posterPath;
-                String overview;
-                String releaseDate;
-                double rating;
-
-                JSONObject movieInformationObject = movieArray.getJSONObject(i);
-                title = movieInformationObject.getString(TMDB_ORIGINAL_TITLE);
-                posterPath = movieInformationObject.getString(TMDB_POSTER_PATH);
-                overview = movieInformationObject.getString(TMDB_OVERVIEW);
-                releaseDate = movieInformationObject.getString(TMDB_RELEASE_DATE);
-                rating = movieInformationObject.getDouble(TMDB_VOTE_AVG);
-
-                ContentValues values = new ContentValues();
-
-                values.put(MovieContract.MovieEntry.COLUMN_TITLE, title);
-                values.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, posterPath);
-                values.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, overview);
-                values.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
-                values.put(MovieContract.MovieEntry.COLUMN_RATING, rating);
-
-                valuesVector.add(values);
-            }
-
-            int inserted = 0;
-            if (valuesVector.size() > 0) {
-                ContentValues[] valuesArray = new ContentValues[valuesVector.size()];
-                valuesVector.toArray(valuesArray);
-
-                getContext().getContentResolver()
-                        .delete(MovieContract.MovieEntry.CONTENT_URI, null, null);
-
-                inserted = getContext().getContentResolver()
-                        .bulkInsert(MovieContract.MovieEntry.CONTENT_URI, valuesArray);
-            }
-            Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " inserted");
-
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, e.getMessage(), e);
-            e.printStackTrace();
         }
     }
 
@@ -225,6 +167,10 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
         return newAccount;
     }
 
+    public static void initializeSyncAdapter(Context context) {
+        getSyncAccount(context);
+    }
+
     private static void onAccountCreated(Account newAccount, Context context) {
         /*
          * Since we've created an account
@@ -242,7 +188,64 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
         syncImmediately(context);
     }
 
-    public static void initializeSyncAdapter(Context context) {
-        getSyncAccount(context);
+    private void getMovieDescriptionFromJson(String moviesJsonStr)
+            throws JSONException {
+        Log.d(LOG_TAG, moviesJsonStr);
+        final String TMDB_RESULTS = "results";
+        final String TMDB_POSTER_PATH = "poster_path";
+        final String TMDB_OVERVIEW = "overview";
+        final String TMDB_RELEASE_DATE = "release_date";
+        final String TMDB_ORIGINAL_TITLE = "original_title";
+        final String TMDB_VOTE_AVG = "vote_average";
+
+        try {
+            JSONObject movieJson = new JSONObject(moviesJsonStr);
+            JSONArray movieArray = movieJson.getJSONArray(TMDB_RESULTS);
+
+            Vector<ContentValues> valuesVector = new Vector<>(movieArray.length());
+
+            for (int i = 0; i < 20; i++) {
+                String title;
+                String posterPath;
+                String overview;
+                String releaseDate;
+                double rating;
+
+                JSONObject movieInformationObject = movieArray.getJSONObject(i);
+                title = movieInformationObject.getString(TMDB_ORIGINAL_TITLE);
+                posterPath = movieInformationObject.getString(TMDB_POSTER_PATH);
+                overview = movieInformationObject.getString(TMDB_OVERVIEW);
+                releaseDate = movieInformationObject.getString(TMDB_RELEASE_DATE);
+                rating = movieInformationObject.getDouble(TMDB_VOTE_AVG);
+
+                ContentValues values = new ContentValues();
+
+                values.put(MovieContract.MovieEntry.COLUMN_TITLE, title);
+                values.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, posterPath);
+                values.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, overview);
+                values.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
+                values.put(MovieContract.MovieEntry.COLUMN_RATING, rating);
+
+                valuesVector.add(values);
+            }
+
+            int inserted = 0;
+            if (valuesVector.size() > 0) {
+                ContentValues[] valuesArray = new ContentValues[valuesVector.size()];
+                valuesVector.toArray(valuesArray);
+
+                getContext().getContentResolver()
+                        .delete(MovieContract.MovieEntry.CONTENT_URI, null, null);
+
+                inserted = getContext().getContentResolver()
+                                   .bulkInsert(MovieContract.MovieEntry.CONTENT_URI, valuesArray);
+            }
+            Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " inserted");
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, e.getMessage(), e);
+            e.printStackTrace();
+        }
     }
+
 }
