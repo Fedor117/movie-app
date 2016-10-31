@@ -1,5 +1,6 @@
 package com.example.user.movieapp.ui.fragment;
 
+import android.app.Activity;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.widget.ListView;
 import com.example.user.movieapp.R;
 import com.example.user.movieapp.data.provider.MovieContract;
 import com.example.user.movieapp.data.sync.MovieSyncAdapter;
+import com.example.user.movieapp.ui.activity.MainActivity;
 import com.example.user.movieapp.ui.adapter.MovieAdapter;
 
 public class MovieFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -28,6 +30,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     public interface Callback {
         // MovieFragmentCallback for when an item has been selected.
         void onItemSelected(Uri movieUri);
+        void updateFragment();
     }
 
     private static final String LOG_TAG = MovieFragment.class.getSimpleName();
@@ -143,7 +146,9 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     }
 
     private void update() {
+        Log.d(LOG_TAG, "Update fragment");
         MovieSyncAdapter.syncImmediately(getActivity());
+        ((Callback) getActivity()).updateFragment();
     }
 
 }

@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,9 +25,10 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new MovieFragment())
+                    .add(R.id.container, new MovieFragment(), MOVIEFRAGMENT_TAG)
                     .commit();
         }
         MovieSyncAdapter.initializeSyncAdapter(this);
@@ -40,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
         if (id == R.id.action_settings) {
             Log.d(LOG_TAG, "Menu item settings pressed");
             startActivity(new Intent(this, SettingsActivity.class));
@@ -55,6 +57,13 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
         Intent intent = new Intent(this, DetailActivity.class)
                 .setData(movieUri);
         startActivity(intent);
+    }
+
+    @Override
+    public void updateFragment() {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, new MovieFragment(), MOVIEFRAGMENT_TAG)
+                .commit();
     }
 
 }
