@@ -2,7 +2,10 @@ package com.example.user.movieapp.ui.activity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -13,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.user.movieapp.R;
+import com.example.user.movieapp.data.provider.MovieContract;
 import com.example.user.movieapp.data.sync.MovieSyncAdapter;
 import com.example.user.movieapp.ui.fragment.MovieFragment;
 
@@ -20,6 +24,8 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String MOVIEFRAGMENT_TAG = "MFTAG";
+
+    private ContentObserver mObserver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +37,15 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
                     .add(R.id.container, new MovieFragment(), MOVIEFRAGMENT_TAG)
                     .commit();
         }
+
+        mObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
+            public void onChange(boolean selfChange) {
+                Log.d(LOG_TAG, "Content observer onChange");
+                updateFragment();
+            }
+        };
+        getContentResolver().registerContentObserver(MovieContract.MovieEntry.CONTENT_URI, false, mObserver);
+
         MovieSyncAdapter.initializeSyncAdapter(this);
     }
 
@@ -49,6 +64,11 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDestroy() {
+        getContentResolver().unregisterContentObserver(mObserver);
     }
 
     @Override

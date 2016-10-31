@@ -241,6 +241,7 @@ public class MovieSyncAdapter extends AbstractThreadedSyncAdapter {
                                    .bulkInsert(MovieContract.MovieEntry.CONTENT_URI, valuesArray);
             }
             Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " inserted");
+            getContext().getContentResolver().notifyChange(MovieContract.MovieEntry.CONTENT_URI, null , false);
 
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);

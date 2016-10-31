@@ -1,9 +1,11 @@
 package com.example.user.movieapp.ui.fragment;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -25,18 +27,18 @@ import com.example.user.movieapp.data.sync.MovieSyncAdapter;
 import com.example.user.movieapp.ui.activity.MainActivity;
 import com.example.user.movieapp.ui.adapter.MovieAdapter;
 
-public class MovieFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class MovieFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
+                                                       SharedPreferences.OnSharedPreferenceChangeListener {
 
     public interface Callback {
         // MovieFragmentCallback for when an item has been selected.
         void onItemSelected(Uri movieUri);
         void updateFragment();
     }
-
     private static final String LOG_TAG = MovieFragment.class.getSimpleName();
+
     private static final String SELECTED_KEY = "selected_position";
     private static final int CURSOR_LOADER_ID = 0;
-
     private static final String[] MOVIE_COLUMNS = {
             MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
             MovieContract.MovieEntry.COLUMN_TITLE,
@@ -47,6 +49,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     };
 
     private int mPosition = ListView.INVALID_POSITION;
+
     private MovieAdapter mMovieAdapter;
     private ListView mListView;
 
@@ -110,6 +113,8 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        preferences.registerOnSharedPreferenceChangeListener(this);
         getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
         super.onActivityCreated(savedInstanceState);
     }
@@ -145,10 +150,14 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         mMovieAdapter.swapCursor(null);
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        update();
+    }
+
     private void update() {
         Log.d(LOG_TAG, "Update fragment");
         MovieSyncAdapter.syncImmediately(getActivity());
-        ((Callback) getActivity()).updateFragment();
     }
 
 }
