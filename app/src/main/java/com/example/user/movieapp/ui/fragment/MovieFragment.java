@@ -45,13 +45,12 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
             MovieContract.MovieEntry.COLUMN_POSTER_PATH,
             MovieContract.MovieEntry.COLUMN_RATING,
             MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
-            MovieContract.MovieEntry.COLUMN_OVERVIEW,
     };
 
     private int mPosition = ListView.INVALID_POSITION;
-
     private MovieAdapter mMovieAdapter;
     private ListView mListView;
+
 
     public MovieFragment() {
         setHasOptionsMenu(true);

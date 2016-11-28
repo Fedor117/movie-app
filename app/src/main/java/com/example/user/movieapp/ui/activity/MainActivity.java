@@ -18,13 +18,16 @@ import android.view.MenuItem;
 import com.example.user.movieapp.R;
 import com.example.user.movieapp.data.provider.MovieContract;
 import com.example.user.movieapp.data.sync.MovieSyncAdapter;
+import com.example.user.movieapp.ui.fragment.DetailFragment;
 import com.example.user.movieapp.ui.fragment.MovieFragment;
 
 public class MainActivity extends AppCompatActivity implements MovieFragment.Callback {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String MOVIEFRAGMENT_TAG = "MFTAG";
+    private static final String DETAILFRAGMENT_TAG = "DFTAG";
 
+    private boolean mTwoPane;
     private ContentObserver mObserver;
 
     @Override
@@ -32,11 +35,20 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new MovieFragment(), MOVIEFRAGMENT_TAG)
-                    .commit();
+        if (findViewById(R.id.movie_detail_container) != null) {
+            mTwoPane = true;
+            if (savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.movie_detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
+                        .commit();
+            }
+        } else {
+            mTwoPane = false;
+            getSupportActionBar().setElevation(0f);
         }
+
+        MovieFragment movieFragment = ((MovieFragment)getSupportFragmentManager()
+                .findFragmentById(R.id.fragment_movies));
 
         mObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
             public void onChange(boolean selfChange) {
@@ -44,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
                 updateFragment();
             }
         };
+
         getContentResolver().registerContentObserver(MovieContract.MovieEntry.CONTENT_URI, false, mObserver);
 
         MovieSyncAdapter.initializeSyncAdapter(this);
@@ -68,21 +81,34 @@ public class MainActivity extends AppCompatActivity implements MovieFragment.Cal
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         getContentResolver().unregisterContentObserver(mObserver);
     }
 
     @Override
     public void onItemSelected(Uri movieUri) {
         Log.d(LOG_TAG, "Movie URI = " + movieUri);
-        Intent intent = new Intent(this, DetailActivity.class)
-                .setData(movieUri);
-        startActivity(intent);
+        if (mTwoPane) {
+            Bundle args = new Bundle();
+            args.putParcelable(DetailFragment.DETAIL_URI, movieUri);
+
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(args);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.movie_detail_container, fragment, DETAILFRAGMENT_TAG)
+                    .commit();
+        } else {
+            Intent intent = new Intent(this, DetailActivity.class)
+                    .setData(movieUri);
+            startActivity(intent);
+        }
     }
 
     @Override
     public void updateFragment() {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, new MovieFragment(), MOVIEFRAGMENT_TAG)
+                .replace(R.id.fragment_movies, new MovieFragment(), MOVIEFRAGMENT_TAG)
                 .commit();
     }
 

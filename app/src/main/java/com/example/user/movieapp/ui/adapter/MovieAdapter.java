@@ -25,14 +25,12 @@ public class MovieAdapter extends CursorAdapter {
         public final TextView titleView;
         public final TextView ratingView;
         public final TextView dateView;
-        public final TextView overviewView;
 
         public ViewHolder(View view) {
             imageView = (ImageView) view.findViewById(R.id.list_item_icon);
             titleView = (TextView) view.findViewById(R.id.list_item_title_textview);
             ratingView = (TextView) view.findViewById(R.id.list_item_rating_textview);
             dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
-            overviewView = (TextView) view.findViewById(R.id.list_item_overview_textview);
         }
 
     }
@@ -62,7 +60,6 @@ public class MovieAdapter extends CursorAdapter {
         String posterPath = cursor.getString(posterIndex);
         Picasso.with(context)
                 .load(BASE_TMDB_IMAGE_URI + posterPath)
-                .error(R.drawable.noprofile)
                 .into(viewHolder.imageView);
 
         int titleIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_TITLE);
@@ -76,10 +73,6 @@ public class MovieAdapter extends CursorAdapter {
         int dateIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_RELEASE_DATE);
         String date = cursor.getString(dateIndex);
         viewHolder.dateView.setText(date);
-
-        int overviewIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_OVERVIEW);
-        String overview = cursor.getString(overviewIndex);
-        viewHolder.overviewView.setText("\t" + overview);
     }
 
 }

@@ -138,7 +138,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             String overview = cursor.getString(overviewIndex);
             mOverviewView.setText("\t" + overview);
 
-            mDescriptionStr = title + " has rating " + rating + " in The Movie DB!";
+            mDescriptionStr = title + " has rating " + rating + " in The Movie DB! ";
 
             if (mShareActionProvider != null) {
                 mShareActionProvider.setShareIntent(createShareIntent());
